@@ -62,7 +62,7 @@ export const prompts: WritingPrompt[] = [
     id: 'p-a1-10',
     level: 'A1',
     text: 'Describe tu barrio: ¿qué hay cerca de tu casa y qué no hay?',
-    en: 'Describe your neighbourhood: what is there near your home and what is missing?',
+    en: "Describe your neighbourhood: what is there near your home and what isn't there?",
   },
   {
     id: 'p-a1-11',
@@ -103,8 +103,8 @@ export const prompts: WritingPrompt[] = [
   {
     id: 'p-a1-17',
     level: 'A1',
-    text: 'Describe un día normal entre semana con horas. (usa «a las...»: a las ocho desayuno...)',
-    en: 'Describe a normal weekday with times. (use «a las...»: a las ocho desayuno...)',
+    text: 'Describe un día normal entre semana: ¿qué haces y a qué hora? (usa «a las...»: a las ocho desayuno...)',
+    en: 'Describe a normal weekday: what do you do and at what time? (use «a las...»: a las ocho desayuno...)',
   },
   {
     id: 'p-a1-18',
@@ -318,7 +318,7 @@ export const prompts: WritingPrompt[] = [
     id: 'p-b1-07',
     level: 'B1',
     text: '¿Cómo te imaginas tu vida dentro de diez años? (usa el futuro simple)',
-    en: 'How do you imagine your life in ten years? (use the simple future)',
+    en: "How do you imagine your life in ten years' time? (use the simple future)",
   },
   {
     id: 'p-b1-08',
@@ -365,8 +365,8 @@ export const prompts: WritingPrompt[] = [
   {
     id: 'p-b1-15',
     level: 'B1',
-    text: 'Explica una fiesta o tradición de tu país: ¿cuándo es, cómo se celebra y qué se come? (usa la pasiva refleja: se celebra, se come...)',
-    en: 'Explain a festival or tradition from your country: when is it, how is it celebrated and what do people eat? (use the passive «se»: se celebra, se come...)',
+    text: 'Describe una fiesta o tradición de tu país: ¿cuándo es, cómo se celebra y qué se come? (usa la pasiva refleja: se celebra, se come...)',
+    en: 'Describe a festival or tradition from your country: when is it, how is it celebrated and what do people eat? (use the passive «se»: se celebra, se come...)',
   },
   {
     id: 'p-b1-16',
@@ -488,6 +488,6 @@ export const prompts: WritingPrompt[] = [
     id: 'p-b2-10',
     level: 'B2',
     text: 'Escribe una carta a tu yo de hace diez años. ¿Qué le dirías y qué le aconsejarías que hiciera? (usa el condicional y el imperfecto de subjuntivo)',
-    en: 'Write a letter to yourself ten years ago. What would you tell yourself and what would you advise yourself to do? (use the conditional and the imperfect subjunctive)',
+    en: 'Write a letter to yourself as you were ten years ago. What would you tell yourself and what would you advise yourself to do? (use the conditional and the imperfect subjunctive)',
   },
 ];

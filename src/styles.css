@@ -298,9 +298,9 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 .switch input:checked + span::after { transform: translateX(20px); }
 .switch input:focus-visible + span { box-shadow: 0 0 0 3px var(--accent-soft); }
 
-.setting { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.setting { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .setting:last-child { border-bottom: 0; }
-.setting .text { flex: 1; min-width: 0; }
+.setting .text { flex: 1 1 180px; min-width: 0; }
 .setting .text b { display: block; font-weight: 600; }
 .setting .text small { display: block; color: var(--ink-3); font-size: 13px; line-height: 1.4; }
 

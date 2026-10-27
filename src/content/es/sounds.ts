@@ -175,12 +175,12 @@ export const sounds: SoundLesson[] = [
     id: 'y-vowel',
     order: 8,
     title: 'Y as a vowel',
-    ipa: '[i]',
+    ipa: '[i] [i̯]',
     spellings: ["y alone (the word 'y', 'and')", 'y at the end of a word: -ay, -ey, -oy, -uy'],
     english:
       "When y stands alone or ends a word it is a vowel: 'y' sounds like 'ee', 'hay' like 'eye', 'rey' like 'ray', 'hoy' rhymes with 'boy'.",
     howTo:
-      "Treat word-final y exactly like the i of a diphthong: a short glide after the main vowel, in the same syllable, with no buzz. 'muy' usually sounds like [mwi], gliding through the u and landing on the i, like English 'we' with an m in front. As soon as a vowel follows, y becomes a consonant again (see 'LL and Y'): 'rey' → 'reyes', 'ley' → 'leyes', 'hoy' but 'yo'. The word 'y' links to its neighbours ('tú y yo' is almost 'tuiyo'), and becomes 'e' before a word starting with an i sound: 'padre e hijo'. Practice: 'hay – rey – hoy – muy', then 'voy – soy – estoy – doy'.",
+      "Treat word-final y exactly like the i of a diphthong: a short glide after the main vowel, in the same syllable, with no buzz. 'muy' is one syllable, [mui̯]: a U that slides into a short i, like 'moo-ee' squeezed into one beat; in fast speech many people say it closer to [mwi], like English 'we' with an m in front. As soon as a vowel follows, y becomes a consonant again (see 'LL and Y'): 'rey' → 'reyes', 'ley' → 'leyes', 'hoy' but 'yo'. The word 'y' links to its neighbours ('tú y yo' is almost 'tuiyo'), and becomes 'e' before a word starting with an i sound: 'padre e hijo'. Practice: 'hay – rey – hoy – muy', then 'voy – soy – estoy – doy'.",
     pitfalls:
       "Pronouncing final y as a buzzing consonant. Saying 'muy' in two syllables ('MOO-ee'). Pronouncing 'hay' with the H.",
     examples: [
@@ -319,7 +319,7 @@ export const sounds: SoundLesson[] = [
     howTo:
       "Back of the tongue against the soft palate, released without aspiration (paper test again). The sound is easy; the spelling is the lesson. Write 'c' before a, o, u (casa, cosa, cuna) but 'qu' before e and i (queso, quince, aquí), because 'ce' and 'ci' spell a different sound (the Castilian [θ]). The U in 'que, qui' is silent: 'queso' is KE-so. To spell a real 'kwe' sound you write 'cue': 'cuerpo', 'escuela'. Practice: 'casa – cosa – cuchara – queso – quiero – aquí – poco'.",
     pitfalls:
-      "Pronouncing the U in 'qu' ('KWIE-ro' for quiero). Aspirating. Misspelling: 'kasa' or 'qasa' instead of 'casa', 'cieso' instead of 'queso'.",
+      "Pronouncing the U in 'qu' ('KWIE-ro' for quiero). Aspirating. Misspelling: 'kasa' or 'qasa' instead of 'casa', 'keso' or 'ceso' instead of 'queso'.",
     examples: [
       { word: 'casa', mark: 'c' },
       { word: 'cosa', mark: 'c' },
@@ -391,8 +391,8 @@ export const sounds: SoundLesson[] = [
   {
     id: 'g',
     order: 16,
-    title: 'G: hard [g] and soft [ɣ]',
-    ipa: '[g] [ɣ]',
+    title: 'G: hard [ɡ] and soft [ɣ]',
+    ipa: '[ɡ] [ɣ]',
     spellings: [
       'g before a, o, u or a consonant: gato, gordo, gusto, grande',
       'gu before e, i (silent u): guerra, guitarra',
@@ -401,7 +401,7 @@ export const sounds: SoundLesson[] = [
     english:
       "Hard g is the 'g' of 'go'. Soft g has no English equivalent: a 'g' where the back of the tongue doesn't quite close, so the voice keeps flowing, like a very relaxed, slightly gargled 'g'.",
     howTo:
-      "Hard [g]: back of the tongue fully against the soft palate, voiced; after a pause and after n: 'Gracias.', 'tengo', 'domingo', 'un gato' [uŋ ˈga.to]. Soft [ɣ]: everywhere else, leave a narrow gap and voice through it: 'agua', 'lago', 'amigo', 'el gato', 'la guitarra'. Spelling: 'ge' and 'gi' make a different sound (the jota, [x]), so to keep the G sound before e or i you write 'gue, gui' with a silent u: 'guerra', 'guitarra', 'Miguel'. If the u must be heard, it takes two dots: 'pingüino' [piŋˈgwi.no], 'vergüenza'. Practice: 'gato / el gato', 'tengo / lago', 'guerra – guitarra – pingüino'.",
+      "Hard [ɡ]: back of the tongue fully against the soft palate, voiced; after a pause and after n: 'Gracias.', 'tengo', 'domingo', 'un gato' [uŋ ˈɡa.to]. Soft [ɣ]: everywhere else, leave a narrow gap and voice through it: 'agua', 'lago', 'amigo', 'el gato', 'la guitarra'. Spelling: 'ge' and 'gi' make a different sound (the jota, [x]), so to keep the G sound before e or i you write 'gue, gui' with a silent u: 'guerra', 'guitarra', 'Miguel'. If the u must be heard, it takes two dots: 'pingüino' [piŋˈɡwi.no], 'vergüenza'. Practice: 'gato / el gato', 'tengo / lago', 'guerra – guitarra – pingüino'.",
     pitfalls:
       "Pronouncing the silent U in 'guitarra' ('gwi-TA-rra'). Reading 'gente' or 'página' with a hard G (they have the jota). Using a full, stopped G between vowels: understood, but stiff.",
     examples: [
@@ -552,11 +552,11 @@ export const sounds: SoundLesson[] = [
     order: 22,
     title: 'LL and Y',
     ipa: '[ʝ]',
-    spellings: ['ll', 'y before a vowel', 'hi + vowel at the start of a word: hielo, hierba'],
+    spellings: ['ll', 'y before a vowel', 'hie- at the start of a word: hielo, hierba'],
     english:
       "Like the 'y' of 'yes', but with the tongue pressed closer to the roof of the mouth so there's a slight buzz, a little toward the 's' of 'measure' or the 'j' of 'jam'. Not the 'l' sound of English 'million'.",
     howTo:
-      "Press the middle of your tongue up against the hard palate, closer than for English y, and voice through the narrow gap: a buzzing 'y'. After a pause, or after n or l, it often hardens into something close to English 'j': 'yo', 'un yate', 'el yeso'. Yeísmo: for nearly all Spaniards (and Latin Americans), ll and y are the same sound, so 'pollo' rhymes with 'poyo'. A separate ll sound (like the 'lli' of 'million') survives only among some older and rural speakers in the north, so you don't need it. You still memorize the spelling: 'llave', 'calle', but 'mayo', 'playa'. Practice: 'yo – llave – calle – pollo – playa – mayo – lluvia – desayuno'.",
+      "Press the middle of your tongue up against the hard palate, closer than for English y, and voice through the narrow gap: a buzzing 'y'. After a pause, or after n or l, it often hardens into something close to English 'j': 'yo', 'un yate', 'el yeso'. Yeísmo: for nearly all Spaniards (and Latin Americans), ll and y are the same sound, so 'pollo' (chicken) sounds exactly like 'poyo' (stone bench). A separate ll sound (like the 'lli' of 'million') survives only among some older and rural speakers in the north, so you don't need it. You still memorize the spelling: 'llave', 'calle', but 'mayo', 'playa'. Practice: 'yo – llave – calle – pollo – playa – mayo – lluvia – desayuno'.",
     pitfalls:
       "Reading LL as an English L ('POL-lo' for pollo, 'CAL-le' for calle). Making it so weak that 'mayo' sounds like 'mao'. Being surprised by a 'jo' for 'yo' from emphatic speakers: same word.",
     examples: [
@@ -585,7 +585,7 @@ export const sounds: SoundLesson[] = [
     ],
     english: "Never pronounced, like the 'h' of 'hour' or 'honest', every single time.",
     howTo:
-      "Just skip it: 'hola' = 'ola', 'hay' = 'ay', 'ahora' = 'a-O-ra', 'hacer' = 'a-CER', 'hombre' = 'OM-bre'. A silent h between vowels doesn't separate them: 'búho' is BU-o. What looks like exceptions are really about the next letters: 'ch' is its own sound; 'hie-' sounds like 'ye' ('hielo' [ˈʝe.lo], 'hierba'); 'hue-' sounds like 'we', often with a light g in front ('huevo' [ˈwe.βo] or [ˈgwe.βo], 'hueso'). A few English loanwords ('hámster', 'hobby') are said with a jota. Practice: 'hola – hay – hombre – hijo – ahora – hacer – huevo – hielo'.",
+      "Just skip it: 'hola' = 'ola', 'hay' = 'ay', 'ahora' = 'a-O-ra', 'hacer' = 'a-CER', 'hombre' = 'OM-bre'. A silent h between vowels doesn't separate them: 'búho' is BU-o. What looks like exceptions are really about the next letters: 'ch' is its own sound; 'hie-' sounds like 'ye' ('hielo' [ˈʝe.lo], 'hierba'); 'hue-' sounds like 'we', often with a light g in front ('huevo' [ˈwe.βo] or [ˈɡwe.βo], 'hueso'). A few English loanwords ('hámster', 'hobby') are said with a jota. Practice: 'hola – hay – hombre – hijo – ahora – hacer – huevo – hielo'.",
     pitfalls:
       "Pronouncing the H with English breath ('HO-la'): the classic beginner mistake. The opposite mistake: silencing the J ('hijo' is EE-ho with a rasp, not EE-o). Spelling: you have to memorize where the h goes ('hora' vs 'ora', 'hecho' vs 'echo').",
     examples: [
@@ -641,7 +641,7 @@ export const sounds: SoundLesson[] = [
     howTo:
       "Before b, v, p, m, N becomes M: 'un beso' [um ˈbe.so], 'invierno', 'un poco', 'conmigo' [komˈmi.ɣo]. Before k, g, j it becomes the 'ng' of 'sing': 'banco' [ˈbaŋ.ko], 'tengo', 'naranja', 'un gato'. Before f it's made with the lip against the teeth: 'enfermo', 'un favor'. Before t and d it's dental like them: 'antes', 'donde'. At the end of a word N stays a clear, full [n], never dropped and never just a nasal vowel as in French or Portuguese: 'pan', 'tren', 'jamón'. Practice: say 'un' before different words and feel your mouth change: 'un beso – un poco – un gato – un café – un día'.",
     pitfalls:
-      "Fighting the assimilation and pronouncing a careful [n] in 'un beso' or 'invierno': it sounds stiff. Dropping final N and nasalizing the vowel ('pa' for pan). Adding an extra g in 'banco' ('bang-go').",
+      "Fighting the assimilation and pronouncing a careful [n] in 'un beso' or 'invierno': it sounds stiff. Dropping final N and nasalizing the vowel ('pa' for pan).",
     examples: [
       { word: 'mano', mark: 'm' },
       { word: 'nariz', mark: 'n' },
@@ -752,7 +752,7 @@ export const sounds: SoundLesson[] = [
     english:
       "Like the 'x' in 'taxi', 'ks', but never the 'gz' of English 'exam' or 'exact'.",
     howTo:
-      "Between vowels say a clear 'ks' (many Spaniards soften it to 'gs', also fine): 'taxi', 'examen' [ekˈsa.men], 'éxito', 'máximo'. Before a consonant many Spaniards simplify it to S: 'texto' ['tes.to], 'extranjero', 'explicar'. Both are correct; the 'ks' is more careful. A few names keep an old spelling where x is the jota: 'México' and 'mexicano' (Spain also accepts 'Méjico'), 'Texas', 'Oaxaca'. Practice: 'taxi – examen – éxito – máximo – texto – extranjero – México'.",
+      "Between vowels say a clear 'ks' (many Spaniards soften it to 'gs', also fine): 'taxi', 'examen' [ekˈsa.men], 'éxito', 'máximo'. Before a consonant many Spaniards simplify it to S: 'texto' [ˈtes.to], 'extranjero', 'explicar'. Both are correct; the 'ks' is more careful. A few names keep an old spelling where x is the jota: 'México' and 'mexicano' (Spain also accepts 'Méjico'), 'Texas', 'Oaxaca'. Practice: 'taxi – examen – éxito – máximo – texto – extranjero – México'.",
     pitfalls:
       "English 'gz' in 'examen', 'exacto', 'existir'. Saying 'México' with KS. Falling for the false friend: 'éxito' means 'success'; an exit is 'salida'.",
     examples: [
@@ -780,7 +780,7 @@ export const sounds: SoundLesson[] = [
     english:
       "Spanish flows as one unbroken stream: there are no little pauses or 'catches' (glottal stops) before words that start with a vowel, as in careful English 'an | apple'. That's a big part of why Spanish sounds so fast.",
     howTo:
-      "(1) Enlace: a final consonant joins the vowel of the next word, as if it began that syllable: 'es un' → 'e-sun', 'los otros' → 'lo-so-tros', 'el agua' → 'e-la-gua', 'Buenos Aires' → 'bue-no-sai-res'. (2) Sinalefa: a final vowel and the next word's first vowel merge into one syllable: 'la alumna' → 'la-lum-na' (identical vowels fuse), 'mi amigo' → 'mia-mi-go', 'su hermano' → 'suer-ma-no' (the h is silent), 'todo el día' → 'to-doel-dí-a'. Never insert a glottal stop (the catch in 'uh-oh') before a vowel. Practice: read slowly while sliding your finger along without lifting it, as if each sentence were one long word: '¿Dónde está el hotel?', 'Tengo un hermano y una hermana'. Then speed up. In listening, this is why word boundaries vanish at first: 'está en el' sounds like 'es-tá-e-nel'.",
+      "(1) Enlace: a final consonant joins the vowel of the next word, as if it began that syllable: 'es un' → 'e-sun', 'los otros' → 'lo-so-tros', 'el agua' → 'e-la-gua', 'Buenos Aires' → 'bue-no-sai-res'. (2) Sinalefa: a final vowel and the next word's first vowel merge into one syllable: 'la alumna' → 'la-lum-na' (identical vowels fuse), 'mi amigo' → 'mia-mi-go', 'su hermano' → 'suer-ma-no' (the h is silent), 'todo el día' → 'to-doel-dí-a'. Never insert a glottal stop (the catch in 'uh-oh') before a vowel. Practice: read slowly while sliding your finger along without lifting it, as if each sentence were one long word: '¿Dónde está el hotel?', 'Tengo un hermano y una hermana'. Then speed up. In listening, this is why word boundaries vanish at first: 'está en el' sounds like 'es-táe-nel'.",
     pitfalls:
       "Pausing or adding a catch before every vowel-initial word ('el | agua'). Not recognizing linked words when listening: 'los otros' sounds like 'lo sotros', 'un elefante' like 'u-ne-le-fan-te'.",
     examples: [
@@ -1059,7 +1059,7 @@ export const pairs: MinimalPairSet[] = [
       ['gasto', 'casto'],
     ],
     note:
-      "K has no puff of air, so listen for the voice in G. Between vowels G is the soft [ɣ] ('pegar'). In 'guiso' and 'quiso' the u is silent: [ˈɣi.so] vs [ˈki.so].",
+      "K has no puff of air, so listen for the voice in G. Between vowels G is the soft [ɣ] ('pegar'). In 'guiso' and 'quiso' the u is silent: [ˈɡi.so] vs [ˈki.so].",
   },
   {
     id: 'jota-k',
@@ -1090,11 +1090,9 @@ export const pairs: MinimalPairSet[] = [
       ['tenia', 'tenía'],
       ['secretaria', 'secretaría'],
       ['continuo', 'continúo'],
-      ['aun', 'aún'],
-      ['rio', 'río'],
     ],
     note:
-      "The first word of each pair glides the two vowels into one syllable; in the second the accent splits them and takes the stress. hacia (towards) / hacía (used to do); sabia (wise) / sabía (knew); seria (serious) / sería (would be); secretaria (secretary) / secretaría (secretary's office); rio (he laughed) / río (river).",
+      "The first word of each pair glides the two vowels into one syllable; in the second the accent splits them and takes the stress. hacia (towards) / hacía (used to do); sabia (wise) / sabía (knew); seria (serious) / sería (would be); secretaria (secretary) / secretaría (secretary's office); continuo (continuous) / continúo (I continue).",
   },
   {
     id: 'vowel-falling-diphthong',

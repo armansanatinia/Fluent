@@ -4,14 +4,16 @@ const RE = /\{\{c(\d+)::(.*?)(?:::(.*?))?\}\}/g;
 
 export type ClozePart =
   | { t: 'text'; text: string }
-  | { t: 'cloze'; n: number; answer: string; hint?: string };
+  /** `answer` is what's shown; `alts` are all accepted answers ({{c1::lo|le::him}}). */
+  | { t: 'cloze'; n: number; answer: string; alts: string[]; hint?: string };
 
 export function parseCloze(text: string): ClozePart[] {
   const parts: ClozePart[] = [];
   let last = 0;
   for (const m of text.matchAll(RE)) {
     if (m.index! > last) parts.push({ t: 'text', text: text.slice(last, m.index) });
-    parts.push({ t: 'cloze', n: Number(m[1]), answer: m[2], hint: m[3] || undefined });
+    const alts = m[2].split('|').map(a => a.trim()).filter(Boolean);
+    parts.push({ t: 'cloze', n: Number(m[1]), answer: alts[0] ?? m[2], alts, hint: m[3] || undefined });
     last = m.index! + m[0].length;
   }
   if (last < text.length) parts.push({ t: 'text', text: text.slice(last) });
@@ -30,6 +32,16 @@ export function plainText(text: string): string {
 /** The answer(s) for cloze number n, joined. */
 export function clozeAnswer(text: string, n: number): string {
   return parseCloze(text).flatMap(p => (p.t === 'cloze' && p.n === n ? [p.answer] : [])).join(' … ');
+}
+
+/** Every accepted way to fill cloze n (alternatives multiply across its blanks). */
+export function clozeAccepted(text: string, n: number): string[] {
+  let out = [''];
+  for (const p of parseCloze(text)) {
+    if (p.t !== 'cloze' || p.n !== n) continue;
+    out = out.flatMap(prefix => p.alts.map(a => (prefix ? `${prefix} ${a}` : a)));
+  }
+  return out;
 }
 
 /**

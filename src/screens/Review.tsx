@@ -3,7 +3,7 @@ import { IconClose, IconEdit, IconPlay, IconUndo } from '../components/icons';
 import { AudioButton, CardImage, GenderTag, GenderWord } from '../components/media';
 import { check, diff, VERDICT_TEXT, type Verdict } from '../lib/answer';
 import { sayWord, speak, stopAudio } from '../lib/audio';
-import { parseCloze, plainText, splitExample } from '../lib/cloze';
+import { clozeAccepted, parseCloze, plainText, splitExample } from '../lib/cloze';
 import { go, useKeys, useNow, useStore } from '../lib/hooks';
 import type { Card, Note } from '../lib/model';
 import { buildQueue, nextCard } from '../lib/queue';
@@ -291,9 +291,9 @@ export function Review() {
   const reveal = () => {
     if (!card || !note || revealed) return;
     if (card.tmpl === 'spell' || card.tmpl.startsWith('cloze') || (card.tmpl === 'recall' && s.settings.typeRecall)) {
-      const expected = card.tmpl === 'recall' ? fullWord(note) : card.tmpl === 'spell' ? note.word : parseCloze(note.word).filter(p => p.t === 'cloze' && p.n === Number(card.tmpl.slice(5))).map(p => (p as { answer: string }).answer).join(' ');
-      setExpected(expected);
-      setVerdict(typed.trim() ? check(typed, expected) : 'empty');
+      const accepted = card.tmpl === 'recall' ? [fullWord(note)] : card.tmpl === 'spell' ? [note.word] : clozeAccepted(note.word, Number(card.tmpl.slice(5)));
+      setExpected(accepted[0]);
+      setVerdict(typed.trim() ? check(typed, accepted[0], accepted.slice(1)) : 'empty');
     }
     setRevealed(true);
     setFxKey(k => k + 1);
