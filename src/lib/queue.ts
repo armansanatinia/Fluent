@@ -69,7 +69,8 @@ export function buildQueue(s: Store, now = s.now()): Queue {
 
 /**
  * Pick the next card. `served` is how many cards this session has shown,
- * used to mix one new card in after every few reviews.
+ * used to mix one new card in after every few reviews. `skip` is the card
+ * just answered: it's avoided only while something else can be shown.
  */
 export function nextCard(q: Queue, now: number, served: number, skip?: string): { card: Card | null; waitUntil?: number } {
   const ok = (c: Card) => c.id !== skip;
@@ -81,11 +82,12 @@ export function nextCard(q: Queue, now: number, served: number, skip?: string): 
   if (rev || fresh) return { card: (rev ?? fresh)! };
   const ahead = q.learning.find(c => c.due <= now + LEARN_AHEAD && ok(c));
   if (ahead) return { card: ahead };
-  const later = q.learning.filter(ok)[0];
-  if (later) return { card: null, waitUntil: later.due };
-  // Only the skipped card is left: show it again.
-  const last = [...q.learning, ...q.review, ...q.fresh][0];
-  return { card: last ?? null };
+  // Nothing else: the card just answered may come back, but not before its step.
+  const skipped = [...q.learning, ...q.review, ...q.fresh].find(c => c.id === skip);
+  const isLearning = (c: Card) => c.state === State.Learning || c.state === State.Relearning;
+  if (skipped && (!isLearning(skipped) || skipped.due <= now + LEARN_AHEAD)) return { card: skipped };
+  const later = q.learning[0];
+  return later ? { card: null, waitUntil: later.due } : { card: null };
 }
 
 /** Cards due today (learning + review) and new cards waiting, for the plan. */

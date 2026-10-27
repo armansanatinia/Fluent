@@ -96,14 +96,27 @@ export interface DayLog {
   id: string; // study day YYYY-MM-DD
   /** Ticked plan items. */
   checks: Record<string, boolean>;
+  /** When each check last changed, so two devices merge to the latest tick. */
+  checkedAt?: Record<string, number>;
   /** Things made today, by kind: word, sentence, vocab, sound, custom, drill, write. */
   made: Record<string, number>;
+  /** Answers on cards that were already in review (counts toward the review limit). */
   reviews: number;
   newCards: number;
+  /** Every answer today, learning steps included. */
+  answers?: number;
   ms: number;
   /** Extra items added by hand for this day. */
   custom?: { id: string; title: string; url?: string }[];
+  /** Ids of extra items removed, so a merge doesn't bring them back. */
+  removed?: string[];
   updated: number;
+}
+
+/** How many cards were answered on a day. */
+export function answered(d: DayLog | undefined): number {
+  if (!d) return 0;
+  return d.answers ?? d.reviews + d.newCards;
 }
 
 export interface JournalEntry {
@@ -248,7 +261,7 @@ export const DEFAULT_DEVICE: DeviceSettings = {
 };
 
 export function emptyDay(id: string): DayLog {
-  return { id, checks: {}, made: {}, reviews: 0, newCards: 0, ms: 0, updated: 0 };
+  return { id, checks: {}, made: {}, reviews: 0, newCards: 0, answers: 0, ms: 0, updated: 0 };
 }
 
 export const uid = () =>

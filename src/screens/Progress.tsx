@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BarChart } from '../components/BarChart';
 import { Bar } from '../components/ui';
 import { useStore } from '../lib/hooks';
-import type { ReviewLog } from '../lib/model';
+import { answered, type ReviewLog } from '../lib/model';
 import { phases } from '../lib/plan';
 import { planCounts } from '../lib/progress';
 import { cardCounts, forecast, lastDays, retention, streak, totalMinutes } from '../lib/stats';
@@ -38,7 +38,7 @@ export function Progress() {
     for (let i = 0; i < 18 * 7; i++) {
       const day = addDays(start, i);
       const d = s.days.get(day);
-      out.push({ day, n: day > end ? -1 : d ? d.reviews + d.newCards : 0 });
+      out.push({ day, n: day > end ? -1 : answered(d) });
     }
     return out;
   }, [s, s.version, today]); // eslint-disable-line react-hooks/exhaustive-deps

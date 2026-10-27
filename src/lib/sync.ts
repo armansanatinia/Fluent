@@ -4,6 +4,7 @@
 
 import * as idb from './db';
 import type { SyncedStore } from './db';
+import { mergeDay, sameContent } from './merge';
 import type { DayLog } from './model';
 import { store } from './store';
 
@@ -66,26 +67,6 @@ export async function health(): Promise<Health | null> {
   }
 }
 
-function mergeDay(a: DayLog, b: DayLog): DayLog {
-  const max = (x: Record<string, number>, y: Record<string, number>) => {
-    const out = { ...x };
-    for (const [k, v] of Object.entries(y)) out[k] = Math.max(out[k] ?? 0, v);
-    return out;
-  };
-  const custom = [...(a.custom ?? [])];
-  for (const c of b.custom ?? []) if (!custom.some(x => x.id === c.id)) custom.push(c);
-  return {
-    id: a.id,
-    checks: { ...a.checks, ...b.checks },
-    made: max(a.made, b.made),
-    reviews: Math.max(a.reviews, b.reviews),
-    newCards: Math.max(a.newCards, b.newCards),
-    ms: Math.max(a.ms, b.ms),
-    custom,
-    updated: Math.max(a.updated, b.updated),
-  };
-}
-
 let running: Promise<{ pushed: number; pulled: number }> | null = null;
 
 export function syncNow(): Promise<{ pushed: number; pulled: number }> {
@@ -115,14 +96,8 @@ async function doSync(): Promise<{ pushed: number; pulled: number }> {
       if (!res.ok) throw new Error(`Sync failed (${res.status}).`);
       pushed += recs.length;
     }
-    // Only clear entries that didn't change while we were sending them.
-    const done: string[] = [];
-    for (const s of sent) {
-      const [st, ...rest] = s.key.split('/');
-      const now = await idb.getOne<{ updated: number }>(st as SyncedStore, rest.join('/'));
-      if (s.updated === -1 || !now || now.updated === s.updated) done.push(s.key);
-    }
-    await idb.clearOutbox(done);
+    // Clear only entries whose record hasn't changed since we read it.
+    await idb.clearOutbox(sent);
   }
 
   // 2. Pull.
@@ -141,22 +116,29 @@ async function doSync(): Promise<{ pushed: number; pulled: number }> {
     };
     for (const w of page.records) {
       const incoming = w.data as { id: string; updated: number };
+      if (w.store === 'revlog') {
+        // Review logs aren't kept in memory: compare with the saved copy (an undo leaves a newer tombstone).
+        const here = await idb.getOne<{ updated: number }>('revlog', w.id);
+        if (!here || incoming.updated > here.updated) add('revlog', false, incoming);
+        continue;
+      }
       const local = store.local(w.store, w.id);
       if (w.store === 'days' && local) {
-        // Both devices may have studied today: keep the most of each count.
+        // Both devices may have studied today: take the latest tick and the most of each count.
         const merged = mergeDay(local as DayLog, incoming as unknown as DayLog);
-        const same = (a: unknown, b: unknown) => JSON.stringify({ ...(a as object), updated: 0 }) === JSON.stringify({ ...(b as object), updated: 0 });
-        if (same(merged, local)) continue;
-        add('days', !same(merged, incoming), same(merged, incoming) ? incoming : { ...merged, updated: Math.max(merged.updated, Date.now()) });
+        if (sameContent(merged, local)) continue;
+        const pushBack = !sameContent(merged, incoming);
+        add('days', pushBack, { ...merged, updated: Math.max(local.updated + 1, incoming.updated, pushBack ? Date.now() : 0) });
         continue;
       }
       if (local && local.updated >= incoming.updated) continue;
       add(w.store, false, incoming);
     }
     for (const { st, queue, recs } of byStore.values()) {
-      await idb.putMany(st, recs, queue);
-      store.applyRemote(st, recs);
-      pulled += recs.length;
+      // applyRemote re-checks against memory, in case you edited something while this page loaded.
+      const taken = store.applyRemote(st, recs);
+      await idb.putMany(st, taken, queue);
+      pulled += taken.length;
     }
     since = page.cursor;
     setCursor(since);

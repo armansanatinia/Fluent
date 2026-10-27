@@ -7,9 +7,10 @@ import type { LanguagePack } from '../content/types';
 import * as idb from './db';
 import type { SyncedStore } from './db';
 import {
-  DEFAULT_DEVICE, defaultSettings, emptyDay, uid,
+  answered, DEFAULT_DEVICE, defaultSettings, emptyDay, uid,
   type Card, type DayLog, type DeviceSettings, type InboxItem, type JournalEntry, type KV, type Note, type ReviewLog, type Settings,
 } from './model';
+import { mergeDay, sameContent } from './merge';
 import type { Built } from './notes';
 import { schedule, seedOf, State, type Rating } from './srs';
 import { dayKey } from './time';
@@ -114,19 +115,26 @@ export class Store {
     return r;
   }
 
-  /** Apply records that came from the sync server (already persisted). */
-  applyRemote(store: SyncedStore, recs: { id: string; updated: number; deleted?: boolean }[]) {
+  /**
+   * Take records from the sync server or a backup, keeping anything newer
+   * that's already here. Returns the records that were taken.
+   */
+  applyRemote<T extends { id: string; updated: number; deleted?: boolean }>(store: SyncedStore, recs: T[]): T[] {
+    const taken: T[] = [];
     for (const r of recs) {
+      const here = this.local(store, r.id);
+      if (here && here.updated > r.updated) continue;
+      taken.push(r);
       switch (store) {
-        case 'notes': this.notes.set(r.id, r as Note); break;
-        case 'cards': this.cards.set(r.id, r as Card); break;
-        case 'days': this.days.set(r.id, r as DayLog); break;
-        case 'journal': this.journal.set(r.id, r as JournalEntry); break;
-        case 'inbox': this.inbox.set(r.id, r as InboxItem); break;
-        case 'kv': this.kv.set(r.id, r as KV); break;
-        case 'settings': this.settings = { ...this.settings, ...(r as Settings) }; break;
+        case 'notes': this.notes.set(r.id, r as unknown as Note); break;
+        case 'cards': this.cards.set(r.id, r as unknown as Card); break;
+        case 'days': this.days.set(r.id, r as unknown as DayLog); break;
+        case 'journal': this.journal.set(r.id, r as unknown as JournalEntry); break;
+        case 'inbox': this.inbox.set(r.id, r as unknown as InboxItem); break;
+        case 'kv': this.kv.set(r.id, r as unknown as KV); break;
+        case 'settings': this.settings = { ...this.settings, ...(r as unknown as Settings) }; break;
         case 'revlog': {
-          const log = r as ReviewLog & { deleted?: boolean };
+          const log = r as unknown as ReviewLog & { deleted?: boolean };
           this.todayLogs = this.todayLogs.filter(l => l.id !== log.id);
           if (this.revlog) this.revlog = this.revlog.filter(l => l.id !== log.id);
           if (log.deleted) break;
@@ -136,7 +144,8 @@ export class Store {
         }
       }
     }
-    this.emit();
+    if (taken.length) this.emit();
+    return taken;
   }
 
   /** Current record for a synced store, for merging during sync. */
@@ -216,7 +225,7 @@ export class Store {
     this.notes.set(note.id, note);
     const cards = built.cards.map(c => {
       const prev = this.cards.get(c.id);
-      return prev && !prev.deleted ? prev : { ...c, updated: now };
+      return prev && !prev.deleted ? prev : { ...c, updated: Math.max(now, (prev?.updated ?? 0) + 1) };
     });
     // Cards no longer wanted for this note get removed.
     const keep = new Set(cards.map(c => c.id));
@@ -282,8 +291,9 @@ export class Store {
     const prevDay = structuredClone(day);
     const nextDay: DayLog = {
       ...day,
-      reviews: day.reviews + (card.state === State.New ? 0 : 1),
+      reviews: day.reviews + (card.state === State.Review ? 1 : 0),
       newCards: day.newCards + (card.state === State.New ? 1 : 0),
+      answers: answered(day) + 1,
       ms: day.ms + Math.min(ms, 120_000),
       updated: Math.max(now, day.updated + 1),
     };
@@ -356,7 +366,7 @@ export class Store {
 
   setCheck(itemId: string, done: boolean, dayId = this.today()) {
     const d = this.day(dayId);
-    this.saveDay({ ...d, checks: { ...d.checks, [itemId]: done } });
+    this.saveDay({ ...d, checks: { ...d.checks, [itemId]: done }, checkedAt: { ...d.checkedAt, [itemId]: this.now() } });
     this.changed();
   }
 
@@ -368,7 +378,7 @@ export class Store {
 
   removeCustomItem(id: string) {
     const d = this.day();
-    this.saveDay({ ...d, custom: (d.custom ?? []).filter(c => c.id !== id) });
+    this.saveDay({ ...d, custom: (d.custom ?? []).filter(c => c.id !== id), removed: [...(d.removed ?? []), id] });
     this.changed();
   }
 
@@ -393,8 +403,8 @@ export class Store {
     const prev = entry.id ? this.journal.get(entry.id) : undefined;
     const isNew = !prev;
     const rec: JournalEntry = {
-      id: uid(), lang: this.settings.lang, day: this.today(), created: now,
-      ...prev, ...entry, updated: Math.max(now, (prev?.updated ?? 0) + 1),
+      lang: this.settings.lang, day: this.today(), created: now,
+      ...prev, ...entry, id: entry.id ?? prev?.id ?? uid(), updated: Math.max(now, (prev?.updated ?? 0) + 1),
     } as JournalEntry;
     this.journal.set(rec.id, rec);
     this.write('journal', [rec]);
@@ -438,18 +448,32 @@ export class Store {
     return out;
   }
 
+  /** Merge a backup in: newer edits win, days merge, nothing newer is overwritten. */
   async importAll(data: Record<string, { id: string; updated: number }[]>) {
-    for (const s of idb.SYNCED) {
-      const recs = data[s];
-      if (Array.isArray(recs) && recs.length) await idb.putMany(s, recs);
+    for (const st of idb.SYNCED) {
+      const recs = data[st];
+      if (!Array.isArray(recs) || !recs.length) continue;
+      const keep: { id: string; updated: number }[] = [];
+      for (const r of recs) {
+        if (!r || typeof r.id !== 'string' || typeof r.updated !== 'number') continue;
+        const here = await idb.getOne<{ id: string; updated: number }>(st, r.id);
+        if (st === 'days' && here) {
+          const merged = mergeDay(here as unknown as DayLog, r as unknown as DayLog);
+          if (!sameContent(merged, here)) keep.push({ ...merged, updated: Math.max(this.now(), here.updated + 1) });
+        } else if (!here || r.updated > here.updated) keep.push(r);
+      }
+      if (keep.length) await idb.putMany(st, keep);
     }
     this.revlog = null;
+    this.undoStack = [];
     await this.init();
     this.onChange?.();
   }
 
   async wipe() {
     await idb.wipe();
+    try { localStorage.removeItem('fluent.cursor'); } catch { /* ignore */ }
+    this.undoStack = [];
     this.notes.clear(); this.cards.clear(); this.days.clear(); this.journal.clear(); this.inbox.clear(); this.kv.clear();
     this.settings = defaultSettings(this.today());
     this.revlog = null;

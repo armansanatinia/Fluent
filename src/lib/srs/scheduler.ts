@@ -83,7 +83,8 @@ function reviewIntervals(prev: Sched, now: number, cfg: SchedulerSettings): { ha
     const S = prev.stability > 0 ? prev.stability : Math.max(prev.ivl, 1);
     const D = prev.difficulty > 0 ? prev.difficulty : 5;
     const rr = retrievability(elapsed, S);
-    const at = (r: Rating) => fsrsIvl(r === 1 ? forgetS(D, S, rr) : recallS(D, S, rr, r), cfg.retention, cfg.maxInterval);
+    const nextS = (r: Rating) => (elapsed < 1 ? Math.max(0.01, shortTermS(S, r)) : r === 1 ? forgetS(D, S, rr) : recallS(D, S, rr, r));
+    const at = (r: Rating) => fsrsIvl(nextS(r), cfg.retention, cfg.maxInterval);
     let hard = at(2);
     let good = at(3);
     let easy = at(4);

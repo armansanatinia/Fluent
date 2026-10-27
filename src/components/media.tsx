@@ -133,7 +133,7 @@ export function AudioButton({ text, url, sentence, auto, size, label }: { text: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto, text]);
   return (
-    <button type="button" className={`play${size ? ` ${size}` : ''}${busy ? ' busy' : ''}`} onClick={play} aria-label={`Play ${text}`} title={source === 'native' ? 'Native recording' : source === 'voice' ? 'Device voice' : 'Play'}>
+    <button type="button" className={`play${size ? ` ${size}` : ''}${busy ? ' busy' : ''}`} onClick={e => { e.stopPropagation(); play(); }} aria-label={`Play ${text}`} title={source === 'native' ? 'Native recording' : source === 'voice' ? 'Device voice' : 'Play'}>
       <IconPlay />
       {!size && <span>{label ?? 'Listen'}</span>}
     </button>

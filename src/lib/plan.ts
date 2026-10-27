@@ -8,7 +8,7 @@
 // stays near your time budget.
 
 import type { ActivityTemplate, LanguagePack, PhaseId } from '../content/types';
-import type { DayLog, Settings } from './model';
+import { answered, type DayLog, type Settings } from './model';
 import { daysBetween, weekday } from './time';
 
 export interface PlanCounts {
@@ -153,8 +153,8 @@ export function buildPlan(pack: LanguagePack, s: Settings, c: PlanCounts, day: D
     title: 'Review your flashcards',
     detail: c.due ? `${c.due} due${c.fresh ? ` · ${c.fresh} new waiting` : ''}` : c.fresh ? `${c.fresh} new cards to learn` : 'All caught up',
     minutes: Math.max(reviewMin + Math.ceil((c.fresh * SEC.review * 2) / 60), c.due || c.fresh ? 3 : 0),
-    done: c.due === 0 && (c.fresh === 0 || day.reviews + day.newCards > 0),
-    progress: day.reviews + day.newCards + c.due > 0 ? { done: day.reviews + day.newCards, total: day.reviews + day.newCards + c.due + c.fresh } : undefined,
+    done: c.due === 0 && (c.fresh === 0 || answered(day) > 0),
+    progress: answered(day) + c.due > 0 ? { done: answered(day), total: answered(day) + c.due + c.fresh } : undefined,
   });
 
   // On heavy review days, scale new work down so the day stays near budget.

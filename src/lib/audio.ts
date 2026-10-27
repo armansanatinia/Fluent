@@ -159,15 +159,16 @@ export async function sayWord(word: string, savedUrl?: string): Promise<'recordi
 
 /**
  * iOS only lets a page play sound after a tap. Play a silent clip on the
- * first tap so later automatic playback (revealing a card) works.
+ * first real tap (touchend or click; pointerdown doesn't count as a gesture)
+ * so later automatic playback (revealing a card) works on the same player.
  */
 export function unlockAudioOnFirstTap() {
+  const events = ['touchend', 'click', 'keydown'] as const;
   const unlock = () => {
-    removeEventListener('pointerdown', unlock, true);
     try {
       player = player ?? new Audio();
       player.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
-      player.play().catch(() => undefined);
+      player.play().then(() => events.forEach(e => removeEventListener(e, unlock, true)), () => undefined);
       if ('speechSynthesis' in globalThis) {
         const u = new SpeechSynthesisUtterance(' ');
         u.volume = 0;
@@ -175,5 +176,17 @@ export function unlockAudioOnFirstTap() {
       }
     } catch { /* ignore */ }
   };
-  addEventListener('pointerdown', unlock, true);
+  events.forEach(e => addEventListener(e, unlock, true));
+}
+
+/** Resolves when the current recording finishes (or after `max` ms). */
+export function untilPlayed(max = 5000): Promise<void> {
+  return new Promise(resolve => {
+    const p = player;
+    if (!p || p.paused || p.ended) return resolve();
+    const done = () => { p.removeEventListener('ended', done); p.removeEventListener('pause', done); resolve(); };
+    p.addEventListener('ended', done);
+    p.addEventListener('pause', done);
+    setTimeout(done, max);
+  });
 }

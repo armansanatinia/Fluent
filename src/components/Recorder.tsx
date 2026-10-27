@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { sayWord } from '../lib/audio';
+import { playUrl, sayWord, untilPlayed } from '../lib/audio';
 import { IconMic, IconPlay, IconStop } from './icons';
 
 /** Record yourself and compare with the native speaker, the book's pronunciation habit. */
@@ -34,10 +34,12 @@ export function Recorder({ word, url }: { word: string; url?: string }) {
     }
   };
   const stop = () => rec.current?.state === 'recording' && rec.current.stop();
-  const mine = () => clip && new Audio(clip).play();
+  // The shared player is already unlocked on iPhone; a new Audio() wouldn't be.
+  const mine = () => { if (clip) playUrl(clip); };
   const compare = async () => {
-    await sayWord(word, url);
-    setTimeout(() => mine(), 1400);
+    const how = await sayWord(word, url);
+    if (how === 'recording') await untilPlayed();
+    setTimeout(mine, 400);
   };
 
   return (

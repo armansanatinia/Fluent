@@ -1,4 +1,4 @@
-import type { ReviewLog } from './model';
+import { answered, type ReviewLog } from './model';
 import { State } from './srs';
 import type { Store } from './store';
 import { addDays, DAY, keyStart } from './time';
@@ -15,7 +15,7 @@ export interface CardCounts {
 function studied(s: Store, day: string): boolean {
   const d = s.days.get(day);
   if (!d) return false;
-  return d.reviews + d.newCards > 0 || Object.values(d.made).some(n => n > 0);
+  return answered(d) > 0 || Object.values(d.made).some(n => n > 0);
 }
 
 /** Days in a row with some study, counting today only once something is done. */
@@ -77,7 +77,7 @@ export function lastDays(s: Store, n = 30): DayStat[] {
   return Array.from({ length: n }, (_, i) => {
     const day = addDays(today, i - n + 1);
     const d = s.days.get(day);
-    return { day, reviews: d ? d.reviews + d.newCards : 0, minutes: d ? Math.round(d.ms / 60000) : 0 };
+    return { day, reviews: answered(d), minutes: d ? Math.round(d.ms / 60000) : 0 };
   });
 }
 

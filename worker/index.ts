@@ -19,6 +19,7 @@ interface Env {
 }
 
 const STORES = new Set(['notes', 'cards', 'revlog', 'days', 'journal', 'inbox', 'kv', 'settings']);
+const RASTER = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/bmp']);
 const ROWS_PER_INSERT = 16; // 6 bound values per row; D1 allows 100 per statement
 
 const CORS: Record<string, string> = {
@@ -30,10 +31,14 @@ const CORS: Record<string, string> = {
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', ...CORS } });
 
-function sameString(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+/** Compare secrets without leaking their length or content through timing. */
+async function sameSecret(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [x, y] = await Promise.all([crypto.subtle.digest('SHA-256', enc.encode(a)), crypto.subtle.digest('SHA-256', enc.encode(b))]);
+  const ua = new Uint8Array(x);
+  const ub = new Uint8Array(y);
   let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < ua.length; i++) diff |= ua[i] ^ ub[i];
   return diff === 0;
 }
 
@@ -123,11 +128,17 @@ async function image(url: URL): Promise<Response> {
     redirect: 'follow',
     cf: { cacheTtl: 86400 },
   });
-  const type = res.headers.get('content-type') ?? '';
+  const type = (res.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
   const size = Number(res.headers.get('content-length') ?? 0);
-  if (!res.ok || !type.startsWith('image/')) return json({ error: 'That link is not an image.' }, 415);
+  // Photos only: no SVG or HTML, which could run script on this site.
+  if (!res.ok || !RASTER.has(type)) return json({ error: 'That link is not a photo.' }, 415);
   if (size > 10_000_000) return json({ error: 'Image too large.' }, 413);
-  return new Response(res.body, { headers: { 'content-type': type, 'cache-control': 'public, max-age=86400', ...CORS } });
+  return new Response(res.body, {
+    headers: {
+      'content-type': type, 'cache-control': 'public, max-age=86400',
+      'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; sandbox", ...CORS,
+    },
+  });
 }
 
 // Only the open APIs the app searches; nothing else goes through the proxy.
@@ -139,11 +150,13 @@ async function proxy(url: URL): Promise<Response> {
   if (target.protocol !== 'https:' || !PROXY_HOSTS.has(target.hostname)) return json({ error: 'Host not allowed.' }, 403);
   const res = await fetch(target.toString(), {
     headers: { 'user-agent': 'FluentApp/1.0 (language-learning flashcards)', accept: 'application/json' },
+    redirect: 'manual', // a redirect could leave the allowed hosts
     cf: { cacheTtl: 3600 },
   });
+  if (res.status >= 300 && res.status < 400) return json({ error: 'Redirects are not followed.' }, 502);
   return new Response(res.body, {
     status: res.status,
-    headers: { 'content-type': res.headers.get('content-type') ?? 'application/json', 'cache-control': 'public, max-age=3600', ...CORS },
+    headers: { 'content-type': 'application/json', 'x-content-type-options': 'nosniff', 'cache-control': 'public, max-age=3600', ...CORS },
   });
 }
 
@@ -154,7 +167,7 @@ export default {
     if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
     const given = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
-    const authed = env.SYNC_TOKEN ? sameString(given, env.SYNC_TOKEN) : isLocal(url);
+    const authed = env.SYNC_TOKEN ? await sameSecret(given, env.SYNC_TOKEN) : isLocal(url);
 
     if (url.pathname === '/api/health') {
       return json({ ok: true, sync: true, ai: !!env.ANTHROPIC_API_KEY && !!env.SYNC_TOKEN, locked: !!env.SYNC_TOKEN, authed });

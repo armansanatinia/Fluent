@@ -11,7 +11,8 @@ export interface DiffPart {
 const clean = (s: string) =>
   s.normalize('NFC').toLowerCase().replace(/[¿?¡!.,;:"“”«»()]/g, '').replace(/\s+/g, ' ').trim();
 
-export const stripAccents = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').normalize('NFC');
+/** Remove written accents (á → a) but keep ñ and ü, which are different letters. */
+export const stripAccents = (s: string) => s.normalize('NFD').replace(/[\u0300-\u0302\u0304-\u0307\u0309-\u036f]/g, '').normalize('NFC');
 
 function distance(a: string, b: string): number {
   const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);

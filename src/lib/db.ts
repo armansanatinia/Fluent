@@ -17,6 +17,8 @@ interface OutboxEntry {
   key: string; // `${store}/${id}`
   store: SyncedStore;
   id: string;
+  /** The record's `updated` when it was queued. */
+  updated?: number;
 }
 
 let dbp: Promise<IDBPDatabase> | null = null;
@@ -51,7 +53,7 @@ export async function putMany(store: SyncedStore, recs: Rec[], queue = true): Pr
   const os = tx.objectStore(store);
   for (const r of recs) {
     os.put(r);
-    if (queue) tx.objectStore('outbox').put({ key: `${store}/${r.id}`, store, id: r.id } satisfies OutboxEntry);
+    if (queue) tx.objectStore('outbox').put({ key: `${store}/${r.id}`, store, id: r.id, updated: r.updated } satisfies OutboxEntry);
   }
   await tx.done;
 }
@@ -60,10 +62,19 @@ export async function outbox(): Promise<OutboxEntry[]> {
   return (await db()).getAll('outbox') as Promise<OutboxEntry[]>;
 }
 
-export async function clearOutbox(keys: string[]): Promise<void> {
+/**
+ * Remove pushed entries, in one transaction, but only where the queued
+ * version is the one that was sent (updated = -1: the record was gone).
+ * A record edited during the push re-queued itself with a newer `updated`
+ * and stays for the next sync.
+ */
+export async function clearOutbox(sent: { key: string; updated: number }[]): Promise<void> {
   const d = await db();
   const tx = d.transaction('outbox', 'readwrite');
-  for (const k of keys) tx.store.delete(k);
+  await Promise.all(sent.map(async s => {
+    const e = (await tx.store.get(s.key)) as OutboxEntry | undefined;
+    if (e && (s.updated === -1 || e.updated === undefined || e.updated === s.updated)) await tx.store.delete(s.key);
+  }));
   await tx.done;
 }
 

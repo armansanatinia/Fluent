@@ -5,7 +5,7 @@ import { check, diff, VERDICT_TEXT, type Verdict } from '../lib/answer';
 import { sayWord, speak, stopAudio } from '../lib/audio';
 import { clozeAccepted, parseCloze, plainText, splitExample } from '../lib/cloze';
 import { go, useKeys, useNow, useStore } from '../lib/hooks';
-import type { Card, Note } from '../lib/model';
+import { answered, type Card, type Note } from '../lib/model';
 import { buildQueue, nextCard } from '../lib/queue';
 import { preview, seedOf, State, type Rating } from '../lib/srs';
 import { formatInterval } from '../lib/time';
@@ -313,15 +313,18 @@ export function Review() {
     setRevealed(true);
   };
 
+  const showCard = (id: string) => {
+    setCurrentId(id);
+    setRevealed(false);
+    setTyped('');
+    setVerdict(null);
+    setPair({ target: Math.random() < 0.5 ? 0 : 1, picked: null });
+    shownAt.current = Date.now();
+  };
+
   const undo = () => {
     const c = s.undo();
-    if (c) {
-      setCurrentId(c.id);
-      setRevealed(false);
-      setTyped('');
-      setVerdict(null);
-      shownAt.current = Date.now();
-    }
+    if (c) showCard(c.id);
   };
 
   const suggested: Rating | null = card?.tmpl === 'pair' && revealed ? (pair.picked === pair.target ? 3 : 1)
@@ -356,10 +359,10 @@ export function Review() {
           <div style={{ fontSize: 56 }}>🎉</div>
           <h2>{waiting ? 'Done for now' : 'All caught up'}</h2>
           <p className="muted">
-            {today.reviews + today.newCards} cards today
+            {answered(today)} cards today
             {waiting ? ` · ${queue.learning.length} still learning, next in ${formatInterval(Math.max(60_000, waiting.due - s.now()))}` : ''}
           </p>
-          {waiting && <button className="btn" onClick={() => pickNext()}>Study the learning cards now</button>}
+          {waiting && <button className="btn" onClick={() => showCard(waiting.id)}>Study the learning cards now</button>}
           <div className="row wrap" style={{ justifyContent: 'center' }}>
             <a className="btn primary" href="#/today">Back to today</a>
             <a className="btn" href="#/study">Make more cards</a>
@@ -373,7 +376,11 @@ export function Review() {
   return (
     <div className="session">
       {header}
-      <div className="flash" onClick={() => !revealed && !isPair && !card.tmpl.startsWith('cloze') && card.tmpl !== 'spell' && !s.settings.typeRecall && reveal()}>
+      <div className="flash" onClick={e => {
+        // Tapping the card reveals it, except taps on its buttons (like Listen).
+        if ((e.target as HTMLElement).closest('button, a, input, textarea')) return;
+        if (!revealed && !isPair && !card.tmpl.startsWith('cloze') && card.tmpl !== 'spell' && !s.settings.typeRecall) reveal();
+      }}>
         {card.state === State.New && <span className="badge info">New</span>}
         <Face note={note} card={card} revealed={revealed} fxKey={fxKey} typed={typed} setTyped={setTyped} verdict={verdict}
           expected={expected} onSubmit={reveal} pair={pair} onPick={onPick} />

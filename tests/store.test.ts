@@ -46,12 +46,13 @@ describe('store', () => {
     t += 11 * MIN;
     s.answer(card.id, 3, 3000);
     expect(s.cards.get(card.id)!.state).toBe(State.Review);
-    expect(s.day().reviews).toBe(1);
+    expect(s.day().answers).toBe(2);
+    expect(s.day().reviews).toBe(0); // learning steps aren't reviews
 
     // Undo puts it back.
     s.undo();
     expect(s.cards.get(card.id)!.state).toBe(State.Learning);
-    expect(s.day().reviews).toBe(0);
+    expect(s.day().answers).toBe(1);
   });
 
   it('persists to IndexedDB', async () => {

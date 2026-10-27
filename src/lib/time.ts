@@ -9,7 +9,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 /** Local calendar date 'YYYY-MM-DD' of the study day containing `ts`. */
 export function dayKey(ts: number, resetHour = 4): string {
-  const d = new Date(ts - resetHour * HOUR);
+  // Local calendar date, moved back a day before the reset hour. (Subtracting
+  // hours instead would drift by one hour on daylight-saving days.)
+  const d = new Date(ts);
+  if (d.getHours() < resetHour) d.setDate(d.getDate() - 1);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
