@@ -643,3 +643,6 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 .heat i[data-l='4'] { background: var(--chart); }
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
 .data-table td, .data-table th { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+
+.keyhint { display: none; }
+@media (hover: hover) and (pointer: fine) { .keyhint { display: inline; } }

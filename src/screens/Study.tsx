@@ -54,6 +54,7 @@ export function Study() {
         <Tile href="#/inbox" emoji="📥" title="Word inbox" text={`Words you meet with tutors, in books and on TV. ${c.inboxOpen} waiting.`} />
         <Tile href="#/sounds/drill" emoji="🎧" title="Ear training drill" text="Twenty quick rounds of minimal pairs." />
         <Tile href="#/browse" emoji="🗂️" title="Browse your cards" text="Search, edit pictures and memories, suspend or reset cards." />
+        <Tile href="#/guide" emoji="🧭" title="How to do the method well" text="Picking pictures, grading honestly, what to do with tutors, a rough timeline." />
       </div>
     </div>
   );

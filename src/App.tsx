@@ -5,6 +5,7 @@ import { go, useRoute, useStore } from './lib/hooks';
 import { Browse } from './screens/Browse';
 import { Drill } from './screens/Drill';
 import { Grammar, GrammarTopicView } from './screens/Grammar';
+import { Guide } from './screens/Guide';
 import { Inbox } from './screens/Inbox';
 import { MakeVocab, Vocab } from './screens/Vocab';
 import { MakeWords, Words } from './screens/Words';
@@ -25,7 +26,7 @@ const TABS = [
   { id: 'resources', label: 'Resources', Icon: IconBooks },
   { id: 'settings', label: 'Settings', Icon: IconSettings },
 ];
-const STUDY = new Set(['study', 'review', 'words', 'sounds', 'grammar', 'vocab', 'write', 'inbox', 'browse']);
+const STUDY = new Set(['study', 'guide', 'review', 'words', 'sounds', 'grammar', 'vocab', 'write', 'inbox', 'browse']);
 
 function isFull(r: string[]) {
   return r[0] === 'review' || r[0] === 'welcome' || (r[0] === 'words' && r[1] === 'make') || (r[0] === 'sounds' && r[1] === 'drill') || (r[0] === 'vocab' && r[1] === 'make');
@@ -48,6 +49,7 @@ function screen(r: string[]): ReactNode {
     case 'resources': return <Resources />;
     case 'settings': return <Settings />;
     case 'welcome': return <Welcome />;
+    case 'guide': return <Guide />;
     default: return <Today />;
   }
 }
@@ -76,7 +78,14 @@ export function App() {
 
   return (
     <div className="app" style={vars}>
-      <main className={`main${full ? ' full' : ''}`}>{screen(route)}</main>
+      <main className={`main${full ? ' full' : ''}`}>
+        {s.saveError && (
+          <div className="notice bad" style={{ marginBottom: 12 }}>
+            This device couldn’t save your last change ({s.saveError}). Free up space, or export a backup in Settings.
+          </div>
+        )}
+        {screen(route)}
+      </main>
       {!full && (
         <nav className="tabbar" aria-label="Main">
           <div className="brand"><img src="/icons/icon.svg" alt="" /> Fluent</div>

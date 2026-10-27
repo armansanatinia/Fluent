@@ -152,7 +152,7 @@ export function Today() {
         <div className="small muted">
           <b>How today was built.</b> Reviews first — they protect everything you’ve learned. Then new material for your current phase
           ({active.map(p => p.title.toLowerCase()).join(', ') || 'fluency'}), sized for about {s.settings.minutes} minutes, plus one thing
-          outside the app. Change the pace in <a href="#/settings">Settings</a>.
+          outside the app. Change the pace in <a href="#/settings">Settings</a>, or read <a href="#/guide">how to do each part well</a>.
         </div>
       </div>
     </div>

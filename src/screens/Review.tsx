@@ -385,13 +385,13 @@ export function Review() {
         </div>
       )}
       {!revealed ? (
-        !isPair && <button className="btn primary big block reveal-btn" onClick={reveal}>Show answer <span className="kbd" style={{ marginLeft: 6 }}>space</span></button>
+        !isPair && <button className="btn primary big block reveal-btn" onClick={reveal}>Show answer <span className="kbd keyhint" style={{ marginLeft: 6 }}>space</span></button>
       ) : (
         <div className="answer-bar">
           {([1, 2, 3, 4] as Rating[]).map(r => (
             <button key={r} className={`grade g${r}`} onClick={() => answer(r)} style={suggested === r ? { outline: '3px solid currentColor' } : undefined}>
               {['Again', 'Hard', 'Good', 'Easy'][r - 1]}
-              <small>{intervals ? formatInterval(intervals[r]) : ''}</small>
+              <small>{intervals ? formatInterval(intervals[r]) : ''}<span className="keyhint"> · {r}</span></small>
             </button>
           ))}
         </div>

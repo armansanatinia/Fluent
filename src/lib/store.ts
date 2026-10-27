@@ -98,8 +98,15 @@ export class Store {
 
   // ---- persistence ---------------------------------------------------------
 
+  /** Set when the device refuses to save (usually storage full). */
+  saveError = '';
+
   private write(store: SyncedStore, recs: { id: string; updated: number }[]) {
-    idb.putMany(store, recs).catch(err => console.error('save failed', store, err));
+    idb.putMany(store, recs).catch(err => {
+      console.error('save failed', store, err);
+      this.saveError = err instanceof Error ? err.message : String(err);
+      this.emit();
+    });
   }
 
   private touch<T extends { updated: number }>(r: T): T {

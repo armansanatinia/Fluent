@@ -28,7 +28,10 @@ export function wordsTarget(s: Store): number {
 export function Words() {
   const s = useStore();
   const [english, setEnglish] = useState(false);
+  const [q, setQ] = useState('');
   const pack = s.pack;
+  const fold = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const match = (w: BaseWord) => !q.trim() || fold(`${w.word} ${w.en} ${w.fem ?? ''}`).includes(fold(q.trim()));
   const made = useMemo(() => new Map(s.liveNotes('word').map(n => [n.ref!, n])), [s, s.version]); // eslint-disable-line react-hooks/exhaustive-deps
   const excluded = new Set(excludedWords(s));
   const done = pack.words.filter(w => made.has(w.id) || excluded.has(w.id)).length;
@@ -55,13 +58,13 @@ export function Words() {
         </div>
       </div>
 
-      <div className="row between" style={{ marginTop: 18 }}>
-        <span className="small muted">Show English concepts</span>
-        <Switch checked={english} onChange={setEnglish} label="Show English" />
+      <div className="row" style={{ marginTop: 18 }}>
+        <input className="input grow" value={q} onChange={e => setQ(e.target.value)} placeholder="Find a word (Spanish or English)" />
+        <label className="row small muted nowrap" style={{ gap: 6 }}>English <Switch checked={english} onChange={setEnglish} label="Show English" /></label>
       </div>
 
       {pack.categories.map(cat => {
-        const list = pack.words.filter(w => w.category === cat.id);
+        const list = pack.words.filter(w => w.category === cat.id && match(w));
         if (!list.length) return null;
         const n = list.filter(w => made.has(w.id)).length;
         return (
