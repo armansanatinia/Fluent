@@ -14,7 +14,8 @@ A language-learning app that follows Gabriel Wyner's *Fluent Forever* step by st
 - **Spaced repetition**: FSRS by default, or Anki's classic SM-2 (the algorithm the book was written around), with learning steps, Again/Hard/Good/Easy and undo.
 - **Resources**: 99 resources (pronunciation, dictionaries, grammar books, tutors, exchanges, corrections, podcasts, YouTube, TV, reading, news and tools). Each is tagged by accent, cost and level, with notes on how to use it the book's way.
 - **Progress**: your roadmap, streak, retention, a cards-per-day chart, a due-cards forecast and a study calendar.
-- **Settings**: pace, tutor and exchange days, gender images and colours, scheduler, voice, sync, the AI helper, backup/restore and CSV export for Anki.
+- **Settings**: pace, tutor and exchange days, gender images and colours, scheduler, voice, sync, the AI helper, a calendar reminder, backup/restore and CSV export for Anki.
+- **The method**: a guide to doing each phase well, covering picking pictures, grading honestly, what to do with tutors (with phrases), and a rough timeline.
 
 ## Put it online (one time, about 10 minutes)
 
@@ -23,21 +24,31 @@ You need a free Cloudflare account. The worker serves the app and stores your pr
 ```bash
 cd fluent
 npm install
-npx wrangler login
-npx wrangler d1 create fluent        # copy the database_id it prints into wrangler.jsonc
-npm run db:remote                    # create the sync table
-npx wrangler secret put SYNC_TOKEN   # make up a long password; you'll type it on each device
-npx wrangler secret put ANTHROPIC_API_KEY   # optional: turns on the AI helper for every device
-npm run deploy                       # prints your URL, e.g. https://fluent.<you>.workers.dev
+npm run setup
 ```
+
+`npm run setup` logs you in to Cloudflare (it opens your browser), creates the database, deploys the app, and sets a sync password (it makes up a strong one if you don't choose one). It can also store an Anthropic API key for the AI helper. At the end it prints your app's address and the password.
 
 Then:
 
-- **iPhone**: open the URL in Safari, then tap Share → **Add to Home Screen**. Open the app, go to **Settings → Sync**, and enter your password.
-- **Computer**: open the same URL and enter the same password. Both devices now sync on their own.
+- **iPhone**: open the address in Safari and tap Share → **Add to Home Screen**. Open the app, go to **Settings → Sync**, and enter the password.
+- **Computer**: open the same address and enter the same password. Both devices now sync on their own.
 - For Spanish (Spain) speech on the iPhone, install a voice: Settings → Accessibility → Spoken Content → Voices → Spanish (Spain).
+- For a daily nudge, use **Settings → Daily reminder** to add a repeating event to your calendar.
 
-You can also skip the server: open the built app anywhere and it works on that one device. Use **Settings → Your data → Export** to back it up.
+<details><summary>Doing it by hand instead</summary>
+
+```bash
+npx wrangler login
+npx wrangler d1 create fluent        # copy the database_id it prints into wrangler.jsonc
+npm run db:remote                    # create the sync table
+npm run deploy                       # prints your URL, e.g. https://fluent.<you>.workers.dev
+npx wrangler secret put SYNC_TOKEN   # make up a long password; you'll type it on each device
+npx wrangler secret put ANTHROPIC_API_KEY   # optional: turns on the AI helper for every device
+```
+</details>
+
+You can also skip the server. The app works on a single device without it; use **Settings → Your data → Export** to back it up.
 
 ## Develop
 
