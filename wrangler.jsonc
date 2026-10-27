@@ -1,0 +1,29 @@
+// Fluent — Cloudflare Worker: serves the app and answers /api/* (sync, AI, images).
+//
+// Local:   npm run dev            (Vite + the worker together)
+// Schema:  npm run db:local       (once)
+//
+// Before the first deploy, run these once and paste the id below:
+//   npx wrangler d1 create fluent
+//   npm run db:remote
+//   npx wrangler secret put SYNC_TOKEN          # a long password; you type it on each device
+//   npx wrangler secret put ANTHROPIC_API_KEY   # optional, turns on the AI helper
+// Then: npm run deploy
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fluent",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fluent",
+      "database_id": "local"
+    }
+  ],
+  "observability": { "enabled": true }
+}
