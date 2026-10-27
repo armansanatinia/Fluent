@@ -47,7 +47,11 @@ export function Words() {
           {target > 0 && <span className="badge accent">Today {Math.min(today, target)}/{target}</span>}
         </div>
         <Bar value={done / pack.words.length} />
-        <a className="btn primary big block" href="#/words/make">{done >= pack.words.length ? 'All words made — review them in Browse' : `Make the next ${Math.max(1, target - today) || 10} words`}</a>
+        {done >= pack.words.length ? (
+          <a className="btn big block" href="#/browse">Every word is made — see them in Browse</a>
+        ) : (
+          <a className="btn primary big block" href="#/words/make">{target > today ? `Make the next ${target - today} word${target - today === 1 ? '' : 's'}` : 'Today’s words are done — make 10 more'}</a>
+        )}
       </div>
 
       <div className="card tint" style={{ marginTop: 14 }}>
