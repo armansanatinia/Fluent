@@ -5,6 +5,7 @@
 //   GET  /api/pull?since=N   records changed after sequence N
 //   POST /api/ai             the AI helper (needs ANTHROPIC_API_KEY)
 //   GET  /api/img?u=URL      fetch a picture for a card (sidesteps CORS)
+//   GET  /api/proxy?u=URL    picture and recording search, if a browser blocks it
 
 import Anthropic from '@anthropic-ai/sdk';
 import { runAi, type AiTask } from '../src/shared/ai';
@@ -129,6 +130,23 @@ async function image(url: URL): Promise<Response> {
   return new Response(res.body, { headers: { 'content-type': type, 'cache-control': 'public, max-age=86400', ...CORS } });
 }
 
+// Only the open APIs the app searches; nothing else goes through the proxy.
+const PROXY_HOSTS = new Set(['api.openverse.org', 'commons.wikimedia.org']);
+
+async function proxy(url: URL): Promise<Response> {
+  let target: URL;
+  try { target = new URL(url.searchParams.get('u') ?? ''); } catch { return json({ error: 'Bad URL.' }, 400); }
+  if (target.protocol !== 'https:' || !PROXY_HOSTS.has(target.hostname)) return json({ error: 'Host not allowed.' }, 403);
+  const res = await fetch(target.toString(), {
+    headers: { 'user-agent': 'FluentApp/1.0 (language-learning flashcards)', accept: 'application/json' },
+    cf: { cacheTtl: 3600 },
+  });
+  return new Response(res.body, {
+    status: res.status,
+    headers: { 'content-type': res.headers.get('content-type') ?? 'application/json', 'cache-control': 'public, max-age=3600', ...CORS },
+  });
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
@@ -148,6 +166,7 @@ export default {
       if (url.pathname === '/api/push' && req.method === 'POST') return await push(req, env);
       if (url.pathname === '/api/pull' && req.method === 'GET') return await pull(url, env);
       if (url.pathname === '/api/img' && req.method === 'GET') return await image(url);
+      if (url.pathname === '/api/proxy' && req.method === 'GET') return await proxy(url);
       if (url.pathname === '/api/ai' && req.method === 'POST') {
         if (!env.SYNC_TOKEN) return json({ error: 'Set SYNC_TOKEN before using the AI helper.' }, 401);
         return await ai(req, env);

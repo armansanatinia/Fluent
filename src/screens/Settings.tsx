@@ -7,7 +7,7 @@ import { useStore } from '../lib/hooks';
 import type { Effect, GenderStyle, Level, Settings as S } from '../lib/model';
 import { DEFAULT_GENDER } from '../lib/model';
 import { health, resetCursor, syncNow, lastError, type Health } from '../lib/sync';
-import { exportCsv, download } from '../lib/backup';
+import { exportCsv, download, googleCalendarLink, reminderIcs } from '../lib/backup';
 import { weekdayName } from '../lib/time';
 
 const EFFECTS: { value: Effect; label: string }[] = [
@@ -188,6 +188,25 @@ function AiPanel() {
   );
 }
 
+function Reminder() {
+  const s = useStore();
+  const [time, setTime] = useState(() => s.get<string>('reminder:time') ?? '19:00');
+  const url = location.origin + '/#/today';
+  return (
+    <>
+      <Row title="Time" help="Adds a repeating event to your calendar, so your phone reminds you every day.">
+        <input className="input" type="time" style={{ width: 120 }} value={time} onChange={e => { setTime(e.target.value); s.set('reminder:time', e.target.value); }} />
+      </Row>
+      <Row title="Add to calendar">
+        <div className="row wrap" style={{ gap: 6, justifyContent: 'flex-end' }}>
+          <button className="btn small" onClick={() => download(new Blob([reminderIcs(time, s.settings.minutes, url)], { type: 'text/calendar' }), 'fluent-reminder.ics')}>Apple / Outlook</button>
+          <a className="btn small" href={googleCalendarLink(time, s.settings.minutes, url)} target="_blank" rel="noopener noreferrer">Google</a>
+        </div>
+      </Row>
+    </>
+  );
+}
+
 export function Settings() {
   const s = useStore();
   const st = s.settings;
@@ -198,6 +217,7 @@ export function Settings() {
   const doExport = async () => {
     const data = await s.exportAll();
     download(new Blob([JSON.stringify({ app: 'fluent', version: 1, at: new Date().toISOString(), data })], { type: 'application/json' }), `fluent-backup-${s.today()}.json`);
+    try { localStorage.setItem('fluent.lastBackup', String(Date.now())); } catch { /* ignore */ }
   };
   const doImport = async (f?: File | null) => {
     if (!f) return;
@@ -252,6 +272,10 @@ export function Settings() {
           <small className="faint" style={{ display: 'block', marginBottom: 8 }}>Free exchanges (Tandem, HelloTalk), from the grammar phase on.</small>
           <Days value={st.exchangeDays} onChange={v => up({ exchangeDays: v })} />
         </div>
+      </Section>
+
+      <Section title="Daily reminder">
+        <Reminder />
       </Section>
 
       <Section title="The gender trick">

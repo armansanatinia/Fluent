@@ -7,6 +7,8 @@ import { startAutoSync } from './lib/sync';
 import './styles.css';
 
 unlockAudioOnFirstTap();
+// Ask the browser not to clear your cards when storage runs low.
+navigator.storage?.persist?.().catch(() => undefined);
 store.init().then(startAutoSync, err => console.error('Could not open the local database', err));
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

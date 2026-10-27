@@ -27,3 +27,36 @@ export function exportCsv(s: Store): string {
   ]);
   return [head, ...rows].map(r => r.map(cell).join(',')).join('\n');
 }
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** A daily calendar event, so your phone reminds you even when the app is closed. */
+export function reminderIcs(time: string, minutes: number, url: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const start = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(h)}${pad(m)}00`;
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Fluent//Daily reminder//EN', 'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT', `UID:fluent-daily-${Date.now()}@fluent`, `DTSTAMP:${stamp}`, `DTSTART:${start}`,
+    `DURATION:PT${minutes}M`, 'RRULE:FREQ=DAILY', 'SUMMARY:Spanish — today’s Fluent plan',
+    `DESCRIPTION:Open your daily plan: ${url}`, `URL:${url}`,
+    'BEGIN:VALARM', 'TRIGGER:PT0M', 'ACTION:DISPLAY', 'DESCRIPTION:Time for Spanish', 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+}
+
+export function googleCalendarLink(time: string, minutes: number, url: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(h, m, 0, 0);
+  const e = new Date(d.getTime() + minutes * 60_000);
+  const f = (x: Date) => `${x.getFullYear()}${pad(x.getMonth() + 1)}${pad(x.getDate())}T${pad(x.getHours())}${pad(x.getMinutes())}00`;
+  const q = new URLSearchParams({
+    action: 'TEMPLATE', text: 'Spanish — today’s Fluent plan', dates: `${f(d)}/${f(e)}`,
+    details: `Open your daily plan: ${url}`, recur: 'RRULE:FREQ=DAILY',
+  });
+  return `https://calendar.google.com/calendar/render?${q}`;
+}

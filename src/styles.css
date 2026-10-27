@@ -158,6 +158,9 @@ p { margin: 0 0 10px; }
 .tab.on { color: var(--accent); }
 .tab .dot { position: absolute; margin-left: 22px; margin-top: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
 
+.tabbar .brand { display: none; align-items: center; gap: 10px; padding: 0 12px 20px; font-weight: 700; font-size: 18px; }
+.tabbar .brand img { width: 30px; height: 30px; }
+
 @media (min-width: 980px) {
   .tabbar {
     top: 0; right: auto; width: 220px;
@@ -171,8 +174,6 @@ p { margin: 0 0 10px; }
   .main { padding-left: 236px; max-width: 1000px; padding-bottom: 40px; }
   .main.full { padding-left: 16px; max-width: 760px; }
 }
-.tabbar .brand { display: none; align-items: center; gap: 10px; padding: 0 12px 20px; font-weight: 700; font-size: 18px; }
-.tabbar .brand img { width: 30px; height: 30px; }
 
 .topbar {
   display: flex; align-items: center; gap: 8px;

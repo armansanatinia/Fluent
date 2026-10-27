@@ -60,12 +60,13 @@ interface FaceProps {
   typed: string;
   setTyped: (s: string) => void;
   verdict: Verdict | null;
+  expected: string;
   onSubmit: () => void;
   pair: { target: number; picked: number | null };
   onPick: (i: number) => void;
 }
 
-function Face({ note, card, revealed, fxKey, typed, setTyped, verdict, onSubmit, pair, onPick }: FaceProps) {
+function Face({ note, card, revealed, fxKey, typed, setTyped, verdict, expected, onSubmit, pair, onPick }: FaceProps) {
   const s = useStore();
   const g = note.gender === 'm' || note.gender === 'f' ? note.gender : null;
   const effect = g && revealed ? s.settings.gender[g].effect : null;
@@ -80,7 +81,7 @@ function Face({ note, card, revealed, fxKey, typed, setTyped, verdict, onSubmit,
     <div className="stack tight" style={{ alignItems: 'center' }}>
       <div className={`badge ${verdict === 'exact' ? 'ok' : verdict === 'wrong' ? 'bad' : 'warn'}`}>{VERDICT_TEXT[verdict]}</div>
       {verdict !== 'exact' && (
-        <div className="diff">{diff(typed, card.tmpl === 'recall' ? fullWord(note) : note.word).map((p, i) => <span key={i} className={p.kind}>{p.text}</span>)}</div>
+        <div className="diff">{diff(typed, expected).map((p, i) => <span key={i} className={p.kind}>{p.text}</span>)}</div>
       )}
     </div>
   );
@@ -250,6 +251,7 @@ export function Review() {
   const [revealed, setRevealed] = useState(false);
   const [typed, setTyped] = useState('');
   const [verdict, setVerdict] = useState<Verdict | null>(null);
+  const [expected, setExpected] = useState('');
   const [fxKey, setFxKey] = useState(0);
   const [pair, setPair] = useState<{ target: number; picked: number | null }>({ target: 0, picked: null });
   const shownAt = useRef(Date.now());
@@ -290,6 +292,7 @@ export function Review() {
     if (!card || !note || revealed) return;
     if (card.tmpl === 'spell' || card.tmpl.startsWith('cloze') || (card.tmpl === 'recall' && s.settings.typeRecall)) {
       const expected = card.tmpl === 'recall' ? fullWord(note) : card.tmpl === 'spell' ? note.word : parseCloze(note.word).filter(p => p.t === 'cloze' && p.n === Number(card.tmpl.slice(5))).map(p => (p as { answer: string }).answer).join(' ');
+      setExpected(expected);
       setVerdict(typed.trim() ? check(typed, expected) : 'empty');
     }
     setRevealed(true);
@@ -373,8 +376,14 @@ export function Review() {
       <div className="flash" onClick={() => !revealed && !isPair && !card.tmpl.startsWith('cloze') && card.tmpl !== 'spell' && !s.settings.typeRecall && reveal()}>
         {card.state === State.New && <span className="badge info">New</span>}
         <Face note={note} card={card} revealed={revealed} fxKey={fxKey} typed={typed} setTyped={setTyped} verdict={verdict}
-          onSubmit={reveal} pair={pair} onPick={onPick} />
+          expected={expected} onSubmit={reveal} pair={pair} onPick={onPick} />
       </div>
+      {revealed && card.lapses >= 4 && (
+        <div className="notice warn small" style={{ marginTop: 10 }}>
+          You’ve forgotten this card {card.lapses} times. The book’s fix isn’t more reviews — it’s a better card:{' '}
+          <a href={`#/browse/${encodeURIComponent(note.id)}`}>pick a more striking picture or add a stronger memory</a>.
+        </div>
+      )}
       {!revealed ? (
         !isPair && <button className="btn primary big block reveal-btn" onClick={reveal}>Show answer <span className="kbd" style={{ marginLeft: 6 }}>space</span></button>
       ) : (

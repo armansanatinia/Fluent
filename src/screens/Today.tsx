@@ -7,6 +7,14 @@ import { todayPlan } from '../lib/progress';
 import { streak } from '../lib/stats';
 import { prettyDate } from '../lib/time';
 
+function needsBackup(s: ReturnType<typeof useStore>): boolean {
+  if (s.device.syncToken) return false;
+  if (s.notes.size < 30) return false;
+  let last = 0;
+  try { last = Number(localStorage.getItem('fluent.lastBackup')) || 0; } catch { /* ignore */ }
+  return Date.now() - last > 7 * 86_400_000;
+}
+
 function greeting() {
   const h = new Date().getHours();
   return h < 13 ? 'Buenos días' : h < 21 ? 'Buenas tardes' : 'Buenas noches';
@@ -96,6 +104,11 @@ export function Today() {
       </div>
 
       {plan.note && <div className="notice warn" style={{ marginBottom: 14 }}>{plan.note}</div>}
+      {needsBackup(s) && (
+        <div className="notice" style={{ marginBottom: 14 }}>
+          Your cards live only on this device. <a href="#/settings">Set up sync</a> or export a backup in Settings, so nothing is lost.
+        </div>
+      )}
 
       {next && (
         next.route ? (

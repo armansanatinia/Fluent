@@ -9,8 +9,8 @@ import { TEMPLATE_LABEL, type Note } from '../lib/model';
 import { State } from '../lib/srs';
 import { formatInterval } from '../lib/time';
 
-const KINDS: { id: Note['kind'] | 'all'; label: string }[] = [
-  { id: 'all', label: 'All' }, { id: 'word', label: 'Base words' }, { id: 'sentence', label: 'Sentences' },
+const KINDS: { id: Note['kind'] | 'all' | 'trouble'; label: string }[] = [
+  { id: 'all', label: 'All' }, { id: 'trouble', label: 'Trouble cards' }, { id: 'word', label: 'Base words' }, { id: 'sentence', label: 'Sentences' },
   { id: 'vocab', label: 'Vocabulary' }, { id: 'custom', label: 'Your words' }, { id: 'sound', label: 'Sounds' }, { id: 'pair', label: 'Pairs' },
 ];
 
@@ -94,11 +94,12 @@ function NoteEditor({ id }: { id: string }) {
 export function Browse({ noteId }: { noteId?: string }) {
   const s = useStore();
   const [q, setQ] = useState('');
-  const [kind, setKind] = useState<Note['kind'] | 'all'>('all');
+  const [kind, setKind] = useState<Note['kind'] | 'all' | 'trouble'>('all');
   const notes = useMemo(() => s.liveNotes().sort((a, b) => b.created - a.created), [s, s.version]); // eslint-disable-line react-hooks/exhaustive-deps
   if (noteId) return <NoteEditor id={noteId} />;
   const f = fold(q.trim());
-  const shown = notes.filter(n => (kind === 'all' || n.kind === kind) && (!f || fold(`${title(n)} ${n.en ?? ''} ${n.personal ?? ''}`).includes(f)));
+  const trouble = (n: Note) => s.cardsOf(n.id).some(c => c.lapses >= 4);
+  const shown = notes.filter(n => (kind === 'all' || (kind === 'trouble' ? trouble(n) : n.kind === kind)) && (!f || fold(`${title(n)} ${n.en ?? ''} ${n.personal ?? ''}`).includes(f)));
 
   return (
     <div className="stack">

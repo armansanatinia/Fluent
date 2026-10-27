@@ -3,6 +3,7 @@
 // device's Spanish (Spain) voice when no recording exists.
 
 import { cacheGet, cacheSet } from './db';
+import { getJson } from './net';
 import { store } from './store';
 
 export interface Recording {
@@ -14,6 +15,7 @@ export interface Recording {
 
 const COMMONS = 'https://commons.wikimedia.org/w/api.php';
 const MONTH = 30 * 86_400_000;
+let lookupDownUntil = 0;
 
 /**
  * Lingua Libre speakers from Spain, ranked first so you hear Castilian. You can
@@ -48,14 +50,13 @@ export async function findRecordings(word: string, llCode = store.pack.linguaLib
   const key = `ll:${llCode}:${w}`;
   const cached = await cacheGet<{ at: number; list: Recording[] }>(key).catch(() => undefined);
   if (cached && Date.now() - cached.at < MONTH) return rankRecordings(cached.list);
+  if (Date.now() < lookupDownUntil) return [];
   try {
     const params = new URLSearchParams({
       action: 'query', format: 'json', origin: '*', list: 'search', srnamespace: '6', srlimit: '50',
       srsearch: `intitle:"${llCode}" intitle:"${w}"`,
     });
-    const res = await fetch(`${COMMONS}?${params}`);
-    if (!res.ok) throw new Error(String(res.status));
-    const data = (await res.json()) as { query?: { search?: { title: string }[] } };
+    const data = await getJson<{ query?: { search?: { title: string }[] } }>(`${COMMONS}?${params}`);
     const prefix = `file:${norm(llCode)}-`;
     const list: Recording[] = [];
     for (const { title } of data.query?.search ?? []) {
@@ -72,6 +73,8 @@ export async function findRecordings(word: string, llCode = store.pack.linguaLib
     await cacheSet(key, { at: Date.now(), list }).catch(() => undefined);
     return rankRecordings(list);
   } catch {
+    // Offline or blocked: don't keep the voice waiting on every word.
+    lookupDownUntil = Date.now() + 5 * 60_000;
     return [];
   }
 }

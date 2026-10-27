@@ -4,7 +4,7 @@
 // Chosen pictures are shrunk and stored inside the card, so they work offline
 // and sync with it.
 
-import { store } from './store';
+import { getJson, serverBase, serverHeaders } from './net';
 
 export interface ImageHit {
   id: string;
@@ -20,11 +20,9 @@ const MAX_SIDE = 480;
 
 async function openverse(q: string, page: number): Promise<ImageHit[]> {
   const params = new URLSearchParams({ q, page_size: '20', page: String(page), mature: 'false' });
-  const res = await fetch(`https://api.openverse.org/v1/images/?${params}`);
-  if (!res.ok) throw new Error(`openverse ${res.status}`);
-  const data = (await res.json()) as {
+  const data = await getJson<{
     results: { id: string; title?: string; url: string; thumbnail?: string; creator?: string; license?: string; license_version?: string; foreign_landing_url?: string }[];
-  };
+  }>(`https://api.openverse.org/v1/images/?${params}`);
   return data.results.map(r => ({
     id: `ov:${r.id}`,
     thumb: r.thumbnail || r.url,
@@ -42,11 +40,9 @@ async function commons(q: string, page: number): Promise<ImageHit[]> {
     gsrsearch: `${q} filetype:bitmap`, gsrlimit: '20', gsroffset: String((page - 1) * 20),
     prop: 'imageinfo', iiprop: 'url|extmetadata', iiurlwidth: '360',
   });
-  const res = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`);
-  if (!res.ok) throw new Error(`commons ${res.status}`);
-  const data = (await res.json()) as {
+  const data = await getJson<{
     query?: { pages?: Record<string, { pageid: number; title: string; index?: number; imageinfo?: { thumburl?: string; url: string; descriptionurl: string; extmetadata?: Record<string, { value: string }> }[] }> };
-  };
+  }>(`https://commons.wikimedia.org/w/api.php?${params}`);
   const pages = Object.values(data.query?.pages ?? {}).sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
   return pages.flatMap(p => {
     const ii = p.imageinfo?.[0];
@@ -98,10 +94,6 @@ export async function shrink(blob: Blob, max = MAX_SIDE): Promise<string> {
   return canvas.toDataURL('image/jpeg', 0.82);
 }
 
-function apiBase(): string {
-  return (store.device.syncUrl || '').replace(/\/$/, '');
-}
-
 /**
  * Turn a picked web image into something stored with the card. Tries a direct
  * download, then the app's own server, and falls back to linking the image.
@@ -112,9 +104,7 @@ export async function keepImage(url: string): Promise<string> {
     if (res.ok) return await shrink(await res.blob());
   } catch { /* blocked by CORS, try the proxy */ }
   try {
-    const headers: Record<string, string> = {};
-    if (store.device.syncToken) headers.authorization = `Bearer ${store.device.syncToken}`;
-    const res = await fetch(`${apiBase()}/api/img?u=${encodeURIComponent(url)}`, { headers });
+    const res = await fetch(`${serverBase()}/api/img?u=${encodeURIComponent(url)}`, { headers: serverHeaders() });
     if (res.ok && (res.headers.get('content-type') ?? '').startsWith('image/')) return await shrink(await res.blob());
   } catch { /* no server */ }
   return url;
