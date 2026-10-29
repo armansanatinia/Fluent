@@ -22,6 +22,7 @@ A language-learning app that follows Gabriel Wyner's *Fluent Forever* step by st
 You need a free Cloudflare account. The worker serves the app and stores your progress for sync.
 
 ```bash
+git clone https://github.com/armansanatinia/fluent.git
 cd fluent
 npm install
 npm run setup
@@ -51,6 +52,8 @@ npx wrangler secret put ANTHROPIC_API_KEY   # optional: turns on the AI helper f
 You can also skip the server. The app works on a single device without it; use **Settings → Your data → Export** to back it up.
 
 ## Develop
+
+Cloud sessions of Claude Code install everything on start (`.claude/hooks/session-start.sh`). Locally:
 
 ```bash
 npm install
