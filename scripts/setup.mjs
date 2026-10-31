@@ -1,19 +1,15 @@
-// One-time setup on Cloudflare: database, deploy, sync password, optional AI key.
-// Run from the fluent/ folder:  npm run setup
-// Safe to run again: it reuses the database and keeps your existing password
-// unless you choose a new one.
-import { execSync, spawnSync } from 'node:child_process';
+// Deploy from your own computer instead of from GitHub (optional; see README).
+// Run from the repo folder:  npm run setup
+// Logs in, deploys (the first deploy creates the database), and sets the sync
+// password and, optionally, the AI helper key. Safe to run again.
+import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 
-const CONFIG = new URL('../wrangler.jsonc', import.meta.url).pathname;
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 const say = msg => console.log(`\n▸ ${msg}`);
-const run = (cmd, opts = {}) => execSync(cmd, { stdio: 'pipe', encoding: 'utf8', ...opts });
 const wrangler = (args, input) => spawnSync('npx', ['wrangler', ...args], { encoding: 'utf8', input, stdio: [input === undefined ? 'inherit' : 'pipe', 'pipe', 'pipe'] });
 
-// 1. Logged in?
 say('Checking your Cloudflare login…');
 let who = wrangler(['whoami']);
 if (/not authenticated|You are not/i.test(who.stdout + who.stderr)) {
@@ -21,43 +17,20 @@ if (/not authenticated|You are not/i.test(who.stdout + who.stderr)) {
   spawnSync('npx', ['wrangler', 'login'], { stdio: 'inherit' });
   who = wrangler(['whoami']);
 }
-console.log((who.stdout.match(/associated with the email (\S+)/) || [])[1] ? `  Logged in as ${who.stdout.match(/associated with the email (\S+)/)[1]}` : '  Logged in.');
 
-// 2. Database.
-let config = readFileSync(CONFIG, 'utf8');
-if (/"database_id":\s*"local"/.test(config)) {
-  say('Creating the sync database…');
-  const created = wrangler(['d1', 'create', 'fluent']);
-  let id = (created.stdout.match(/"?database_id"?\s*[:=]\s*"([0-9a-f-]{36})"/) || [])[1];
-  if (!id) {
-    const list = wrangler(['d1', 'list', '--json']);
-    try { id = JSON.parse(list.stdout).find(d => d.name === 'fluent')?.uuid; } catch { /* fall through */ }
-  }
-  if (!id) {
-    console.error(created.stdout + created.stderr);
-    throw new Error('Could not create or find the "fluent" database. Run `npx wrangler d1 create fluent` and paste its id into wrangler.jsonc.');
-  }
-  config = config.replace(/"database_id":\s*"local"/, `"database_id": "${id}"`);
-  writeFileSync(CONFIG, config);
-  console.log(`  Database id ${id} saved in wrangler.jsonc.`);
-} else {
-  console.log('  Database already set in wrangler.jsonc.');
-}
-say('Creating the table (safe to repeat)…');
-const schema = wrangler(['d1', 'execute', 'fluent', '--remote', '--file=./schema.sql', '--yes']);
-if (schema.status !== 0) { console.error(schema.stdout + schema.stderr); throw new Error('Could not create the table.'); }
-
-// 3. Deploy.
-say('Building and deploying the app…');
-run('npm run build', { stdio: 'inherit' });
+say('Building and deploying…');
+const build = spawnSync('npm', ['run', 'build'], { stdio: 'inherit' });
+if (build.status !== 0) throw new Error('The build failed.');
 const dep = wrangler(['deploy']);
 process.stdout.write(dep.stdout);
-if (dep.status !== 0) { console.error(dep.stderr); throw new Error('Deploy failed.'); }
+if (dep.status !== 0) {
+  console.error(dep.stderr);
+  if (/zone|domain/i.test(dep.stderr)) console.error('\nIs armansanatinia.com added to this Cloudflare account and Active? See the README.');
+  throw new Error('Deploy failed.');
+}
 const url = (dep.stdout.match(/https:\/\/[^\s]+\.workers\.dev/) || [])[0];
 
-// 4. Sync password.
-const existing = wrangler(['secret', 'list']);
-const hasToken = /SYNC_TOKEN/.test(existing.stdout);
+const hasToken = /SYNC_TOKEN/.test(wrangler(['secret', 'list']).stdout);
 let token = '';
 const answer = (await rl.question(hasToken
   ? '\nA sync password is already set. Press Enter to keep it, or type "new" to make a new one: '
@@ -68,8 +41,7 @@ if (!hasToken || answer) {
   if (put.status !== 0) { console.error(put.stdout + put.stderr); throw new Error('Could not save the sync password.'); }
 }
 
-// 5. Optional AI helper.
-const key = (await rl.question('\nOptional: paste an Anthropic API key to turn on the AI helper for all your devices (Enter to skip): ')).trim();
+const key = (await rl.question('\nOptional: paste an Anthropic API key to turn on the AI helper (Enter to skip): ')).trim();
 if (key) {
   const put = wrangler(['secret', 'put', 'ANTHROPIC_API_KEY'], `${key}\n`);
   console.log(put.status === 0 ? '  AI helper key saved.' : `  Could not save the key: ${put.stderr}`);
@@ -77,7 +49,7 @@ if (key) {
 rl.close();
 
 console.log('\n────────────────────────────────────────');
-console.log(`Your app: ${url ?? '(see the deploy output above)'}`);
+console.log('Your app: https://fluent.armansanatinia.com' + (url ? `  (also ${url})` : ''));
 if (token) console.log(`Sync password: ${token}   ← type this into Settings → Sync on each device`);
 console.log('On iPhone: open the link in Safari → Share → Add to Home Screen.');
 console.log('────────────────────────────────────────\n');

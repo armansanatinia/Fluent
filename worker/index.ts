@@ -160,11 +160,33 @@ async function proxy(url: URL): Promise<Response> {
   });
 }
 
+// The sync table, created on first use so a fresh database needs no setup.
+// Same statements as schema.sql; all are safe to repeat.
+const SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS records (store TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL,
+     updated INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0, seq INTEGER NOT NULL, PRIMARY KEY (store, id))`,
+  `CREATE INDEX IF NOT EXISTS records_seq ON records (seq)`,
+  `CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v INTEGER NOT NULL)`,
+  `INSERT OR IGNORE INTO meta (k, v) VALUES ('seq', 0)`,
+];
+let schemaReady: Promise<unknown> | null = null;
+
+function ensureSchema(env: Env): Promise<unknown> {
+  if (!schemaReady) {
+    schemaReady = env.DB.batch(SCHEMA.map(sql => env.DB.prepare(sql))).catch(err => {
+      schemaReady = null; // try again on the next request
+      throw err;
+    });
+  }
+  return schemaReady;
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(req);
     if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
+    if (url.pathname === '/api/push' || url.pathname === '/api/pull') await ensureSchema(env);
 
     const given = (req.headers.get('authorization') ?? '').replace(/^Bearer\s+/i, '');
     const authed = env.SYNC_TOKEN ? await sameSecret(given, env.SYNC_TOKEN) : isLocal(url);

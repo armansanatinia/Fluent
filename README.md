@@ -17,39 +17,38 @@ A language-learning app that follows Gabriel Wyner's *Fluent Forever* step by st
 - **Settings**: pace, tutor and exchange days, gender images and colours, scheduler, voice, sync, the AI helper, a calendar reminder, backup/restore and CSV export for Anki.
 - **The method**: a guide to doing each phase well, covering picking pictures, grading honestly, what to do with tutors (with phrases), and a rough timeline.
 
-## Put it online (one time, about 10 minutes)
+## Put it online
 
-You need a free Cloudflare account. The worker serves the app and stores your progress for sync.
+The app lives at **https://fluent.armansanatinia.com**. Cloudflare builds and deploys it straight from this GitHub repo, so every push to `main` goes live within a minute or two. Nothing runs on your computer.
 
-```bash
-git clone https://github.com/armansanatinia/fluent.git
-cd fluent
-npm install
-npm run setup
-```
+One-time setup, all in the Cloudflare dashboard (works from a phone):
 
-`npm run setup` logs you in to Cloudflare (it opens your browser), creates the database, deploys the app, and sets a sync password (it makes up a strong one if you don't choose one). It can also store an Anthropic API key for the AI helper. At the end it prints your app's address and the password.
+1. **armansanatinia.com is in Cloudflare.** If you haven't bought it yet, buy it in Cloudflare (Domain Registration → Register Domains) and it's ready immediately. If you bought it elsewhere, use **Add a domain**, choose the Free plan, change the nameservers at your registrar to the two Cloudflare gives you, and wait for it to show **Active**.
+2. **Workers & Pages → Create → Import a repository.** Connect GitHub if asked, pick **armansanatinia/Fluent**, and deploy with:
+   - Build command: `npm run build`
+   - Deploy command: `npx wrangler deploy`
+
+   The first deploy creates the sync database and connects `fluent.armansanatinia.com`. You don't do either by hand.
+3. **Set the sync password.** Open the new **fluent** Worker, go to **Settings → Variables and Secrets → Add**, choose the type **Secret**, and set `SYNC_TOKEN` to a long password you make up. Optionally add `ANTHROPIC_API_KEY` as well, to turn on the AI helper.
 
 Then:
 
-- **iPhone**: open the address in Safari and tap Share → **Add to Home Screen**. Open the app, go to **Settings → Sync**, and enter the password.
+- **iPhone**: open https://fluent.armansanatinia.com in Safari and tap Share → **Add to Home Screen**. Open the app, go to **Settings → Sync**, and enter the password.
 - **Computer**: open the same address and enter the same password. Both devices now sync on their own.
 - For Spanish (Spain) speech on the iPhone, install a voice: Settings → Accessibility → Spoken Content → Voices → Spanish (Spain).
 - For a daily nudge, use **Settings → Daily reminder** to add a repeating event to your calendar.
 
-<details><summary>Doing it by hand instead</summary>
+<details><summary>Deploying from your own computer instead</summary>
 
 ```bash
-npx wrangler login
-npx wrangler d1 create fluent        # copy the database_id it prints into wrangler.jsonc
-npm run db:remote                    # create the sync table
-npm run deploy                       # prints your URL, e.g. https://fluent.<you>.workers.dev
-npx wrangler secret put SYNC_TOKEN   # make up a long password; you'll type it on each device
-npx wrangler secret put ANTHROPIC_API_KEY   # optional: turns on the AI helper for every device
+git clone https://github.com/armansanatinia/Fluent.git
+cd Fluent
+npm install
+npm run setup   # logs in, deploys, sets the sync password and optional AI key
 ```
 </details>
 
-You can also skip the server. The app works on a single device without it; use **Settings → Your data → Export** to back it up.
+The app also works on a single device without any server. Use **Settings → Your data → Export** to back it up.
 
 ## Develop
 
@@ -57,7 +56,6 @@ Cloud sessions of Claude Code install everything on start (`.claude/hooks/sessio
 
 ```bash
 npm install
-npm run db:local   # once
 npm run dev        # app and worker together at http://localhost:5173
 npm test           # scheduler, IPA, plan, cloze and store tests
 npm run typecheck

@@ -1,14 +1,14 @@
 // Fluent — Cloudflare Worker: serves the app and answers /api/* (sync, AI, images).
 //
-// Local:   npm run dev            (Vite + the worker together)
-// Schema:  npm run db:local       (once)
+// Deploys from GitHub through Cloudflare (Workers & Pages → Import a repository),
+// or by hand with `npm run deploy`. The first deploy creates the D1 database by
+// itself (no database_id needed), and the worker creates its table on first use.
 //
-// Before the first deploy, run these once and paste the id below:
-//   npx wrangler d1 create fluent
-//   npm run db:remote
-//   npx wrangler secret put SYNC_TOKEN          # a long password; you type it on each device
-//   npx wrangler secret put ANTHROPIC_API_KEY   # optional, turns on the AI helper
-// Then: npm run deploy
+// Secrets, set in the dashboard (Worker → Settings → Variables and Secrets) or with wrangler:
+//   SYNC_TOKEN          a long password; you type it on each device to sync
+//   ANTHROPIC_API_KEY   optional, turns on the AI helper
+//
+// Local: npm run dev (Vite + the worker together). The local database also sets itself up.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fluent",
@@ -21,9 +21,11 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "fluent",
-      "database_id": "local"
+      "database_name": "fluent"
     }
   ],
+  // The app's address. armansanatinia.com must be added to the same Cloudflare account.
+  "routes": [{ "pattern": "fluent.armansanatinia.com", "custom_domain": true }],
+  "workers_dev": true,
   "observability": { "enabled": true }
 }
